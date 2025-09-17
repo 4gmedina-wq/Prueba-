@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Prueba Semisenior — Interactivo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1724; --card:#0b1220; --accent:#6ee7b7; --muted:#9aa4b2; --glass: rgba(255,255,255,0.03);
+  }
+  *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+  body{margin:0; min-height:100vh; background:linear-gradient(180deg,#071020 0%, #0b1220 100%); color:#e6eef6; -webkit-font-smoothing:antialiased;}
+  .app{max-width:1100px;margin:36px auto;padding:28px;}
+  header{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+  .logo{width:72px;height:72px;border-radius:12px;background:linear-gradient(90deg,#0ea5a4,#60a5fa);display:flex;align-items:center;justify-content:center;font-weight:800;color:#082;box-shadow:0 8px 30px rgba(2,6,23,0.7);}
+  h1{font-size:20px;margin:0}
+  p.lead{margin:0;color:var(--muted);font-size:13px}
+  .grid{display:grid;grid-template-columns: 1fr 320px; gap:20px; align-items:start;}
+  .card{background:var(--card); padding:18px;border-radius:14px; box-shadow:0 6px 24px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.02);}
+  .question-card{min-height:220px; display:flex; flex-direction:column; gap:12px}
+  .q-title{display:flex;justify-content:space-between;align-items:center}
+  .q-index{font-weight:700;color:var(--accent);background:rgba(110,231,183,0.08);padding:8px 12px;border-radius:999px;font-size:13px}
+  .q-text{font-size:18px;line-height:1.4}
+  .options{display:grid;gap:10px;margin-top:6px}
+  .opt{background:var(--glass);padding:12px;border-radius:10px;cursor:pointer;display:flex;gap:12px;align-items:center;border:1px solid transparent;transition:all .18s}
+  .opt:hover{transform:translateY(-4px); box-shadow:0 10px 30px rgba(2,6,23,0.6); border-color:rgba(255,255,255,0.03)}
+  .opt.checked{outline:3px solid rgba(110,231,183,0.08); border-color:rgba(110,231,183,0.12)}
+  .opt .letter{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-weight:700;border-radius:8px;background:linear-gradient(180deg,#0b1220, #061018);border:1px solid rgba(255,255,255,0.03)}
+  .controls{display:flex;gap:12px;margin-top:12px;align-items:center}
+  .btn{background:linear-gradient(90deg,#0ea5a4,#60a5fa);color:#042;border:none;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(6,8,23,0.6)}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
+  aside .summary{display:flex;flex-direction:column;gap:12px}
+  .stat{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border:1px solid rgba(255,255,255,0.02)}
+  .small{font-size:13px;color:var(--muted)}
+  .explanation{margin-top:10px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.02);font-size:14px;color:#dff6ea}
+  footer{margin-top:22px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .progress{height:10px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden}
+  .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%}
+  /* responsive */
+  @media (max-width:960px){ .grid{grid-template-columns: 1fr; } aside{order:-1} .logo{width:56px;height:56px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">G</div>
+    <div>
+      <h1>Prueba Semisenior — Presentación Interactiva</h1>
+      <p class="lead">Interfaz interactiva para revisar preguntas, seleccionar respuestas y mostrar soluciones. Diseñada para presentación y demostración en entrevistas.</p>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- Panel principal con preguntas -->
+    <main class="card question-card" id="mainCard">
+      <div class="q-title">
+        <div class="q-index" id="qIndex">Pregunta 1 / 5</div>
+        <div class="small" id="qType">Tipo: Opción múltiple</div>
+      </div>
+
+      <div>
+        <div class="q-text" id="qText">Cargando preguntas...</div>
+      </div>
+
+      <div class="options" id="optionsContainer"></div>
+
+      <div class="controls">
+        <button class="btn ghost" id="prevBtn">&larr; Anterior</button>
+        <button class="btn ghost" id="nextBtn">Siguiente &rarr;</button>
+        <button class="btn" id="showAnswerBtn">Mostrar respuesta</button>
+        <button class="btn ghost" id="toggleExplanationBtn">Mostrar explicación</button>
+      </div>
+
+      <div class="explanation" id="explanation" style="display:none"></div>
+
+      <footer>
+        <div class="small">Seleccionadas: <span id="selectedCount">0</span></div>
+        <div style="width:40%"><div class="progress"><i id="progressBar" style="width:0%"></i></div></div>
+      </footer>
+    </main>
+
+    <!-- Aside: resumen y acciones -->
+    <aside class="card" style="height:100%;">
+      <div class="summary">
+        <div class="stat">
+          <div>
+            <div style="font-weight:800">Resumen del Test</div>
+            <div class="small">Interactúa para ver respuestas y generar evidencia</div>
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="small">Preguntas totales</div>
+          <div id="totalQuestions">0</div>
+        </div>
+
+        <div class="stat">
+          <div class="small">Respuestas correctas</div>
+          <div id="correctCount">0</div>
+        </div>
+
+        <div class="stat">
+          <div class="small">Exportar</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn" id="exportJsonBtn">Exportar JSON</button>
+            <button class="btn ghost" id="printBtn">Imprimir / PDF</button>
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="small">Instrucciones</div>
+          <div class="small">Haz clic en opciones para elegir. <br> Usa "Mostrar respuesta" para ver la solución y la explicación.</div>
+        </div>
+
+        <div style="margin-top:8px;">
+          <label class="small" style="color:var(--muted)">Tema / Nota:</label>
+          <textarea id="note" style="width:100%;min-height:80px;margin-top:8px;border-radius:8px;padding:10px;background:transparent;border:1px solid rgba(255,255,255,0.03);color:#eafaf0"></textarea>
+        </div>
+
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+/*
+  App JS
+  - preguntas: array con objetos { id, text, options: [{key,label}], correct: 'A', explanation }
+  - soporta selección, navegación, mostrar respuesta, exportar JSON
+*/
+
+// Ejemplo inicial basado en tus respuestas previas.
+// Sustituye o amplía con TODO el contenido del PDF.
+const preguntas = [
+  {
+    id:1,
+    text:"1) Completa la serie: RQP, ONM, LKJ, ___, FED",
+    options:[
+      {key:"A", label:"IHG"},
+      {key:"B", label:"IHF"},
+      {key:"C", label:"IGF"},
+      {key:"D", label:"HGF"}
+    ],
+    correct:"A",
+    explanation:"Cada grupo son 3 letras consecutivas en orden inverso. Después de LKJ (L K J) vienen I H G."
+  },
+  {
+    id:2,
+    text:"2) Completa: KBJ, LCK, MDL, NEM, ___",
+    options:[
+      {key:"A", label:"PFO"},
+      {key:"B", label:"OFN"},
+      {key:"C", label:"OFG"},
+      {key:"D", label:"OFM"}
+    ],
+    correct:"B",
+    explanation:"Cada letra avanza +1 por bloque: K→L→M→N→O ; B→C→D→E→F ; J→K→L→M→N → OFN."
+  },
+  {
+    id:3,
+    text:"3) Serie: 104,109,115,122,130, ___",
+    options:[
+      {key:"A", label:"138"},
+      {key:"B", label:"139"},
+      {key:"C", label:"140"},
+      {key:"D", label:"141"}
+    ],
+    correct:"B",
+    explanation:"Diferencias +5,+6,+7,+8 => próximo +9 => 130+9=139."
+  },
+  {
+    id:4,
+    text:"4) Serie: 15,31,63,127,255, ___",
+    options:[
+      {key:"A", label:"509"},
+      {key:"B", label:"512"},
+      {key:"C", label:"511"},
+      {key:"D", label:"513"}
+    ],
+    correct:"C",
+    explanation:"Cada término es 2^n - 1: 2^9 -1 = 511."
+  },
+  {
+    id:5,
+    text:"5) ¿Cuál grupo incluye a una persona que prefiere té, pero no es juez?",
+    options:[
+      {key:"A", label:"ACE"},
+      {key:"B", label:"BDE"},
+      {key:"C", label:"CDF"},
+      {key:"D", label:"ABE"}
+    ],
+    correct:"A",
+    explanation:"Solución consistente: Artista A prefiere té, Médico C prefiere té; juez es E — el grupo ACE contiene una persona que prefiere té y no es juez."
+  }
+];
+
+let state = {
+  idx: 0,
+  selected: {},   // map preguntaId -> key
+  revealed: {},   // map preguntaId -> boolean (si se mostró la respuesta)
+};
+
+const totalQ = preguntas.length;
+document.getElementById('totalQuestions').textContent = totalQ;
+
+function renderQuestion(){
+  const q = preguntas[state.idx];
+  document.getElementById('qIndex').textContent = `Pregunta ${state.idx+1} / ${totalQ}`;
+  document.getElementById('qText').textContent = q.text;
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  q.options.forEach(opt=>{
+    const div = document.createElement('div');
+    div.className = 'opt' + (state.selected[q.id]===opt.key ? ' checked' : '');
+    div.dataset.key = opt.key;
+    div.innerHTML = `<div class="letter">${opt.key}</div><div style="flex:1">${opt.label}</div>`;
+    div.onclick = () => {
+      state.selected[q.id] = opt.key;
+      updateSelectedCount();
+      renderQuestion();
+    };
+    container.appendChild(div);
+  });
+
+  // explanation
+  const expl = document.getElementById('explanation');
+  if(state.revealed[q.id]){
+    expl.style.display = 'block';
+    expl.innerHTML = `<strong>Respuesta correcta:</strong> ${q.correct} <br><br> ${q.explanation}`;
+  } else {
+    expl.style.display = 'none';
+  }
+  updateProgress();
+  updateStats();
+}
+
+function updateSelectedCount(){
+  document.getElementById('selectedCount').textContent = Object.keys(state.selected).length;
+}
+
+function updateProgress(){
+  const answered = Object.keys(state.selected).length;
+  const pct = Math.round((answered/totalQ)*100);
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+
+function showAnswer(){
+  const q = preguntas[state.idx];
+  state.revealed[q.id] = true;
+  renderQuestion();
+  updateStats();
+}
+
+function toggleExplanation(){
+  const q = preguntas[state.idx];
+  state.revealed[q.id] = !state.revealed[q.id];
+  renderQuestion();
+}
+
+function nextQuestion(){
+  if(state.idx < totalQ - 1) state.idx++;
+  renderQuestion();
+}
+function prevQuestion(){
+  if(state.idx > 0) state.idx--;
+  renderQuestion();
+}
+
+function updateStats(){
+  // count correct answers selected
+  let correct = 0;
+  preguntas.forEach(p=>{
+    if(state.selected[p.id] && state.selected[p.id] === p.correct) correct++;
+  });
+  document.getElementById('correctCount').textContent = correct;
+}
+
+function exportJSON(){
+  const payload = {
+    createdAt: new Date().toISOString(),
+    candidate: "Nombre del candidato",
+    responses: preguntas.map(p=>{
+      return {
+        id:p.id,
+        question:p.text,
+        selected: state.selected[p.id] || null,
+        correct: p.correct,
+        isCorrect: (state.selected[p.id] === p.correct)
+      };
+    }),
+    notes: document.getElementById('note').value
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'prueba_semisenior_respuestas.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function printPage(){
+  window.print();
+}
+
+// events
+document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+document.getElementById('prevBtn').addEventListener('click', prevQuestion);
+document.getElementById('showAnswerBtn').addEventListener('click', showAnswer);
+document.getElementById('toggleExplanationBtn').addEventListener('click', toggleExplanation);
+document.getElementById('exportJsonBtn').addEventListener('click', exportJSON);
+document.getElementById('printBtn').addEventListener('click', printPage);
+
+// init
+renderQuestion();
+updateSelectedCount();
+updateProgress();
+updateStats();
+</script>
+
+</body>
+</html>
